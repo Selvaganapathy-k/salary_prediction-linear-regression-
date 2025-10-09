@@ -1,8 +1,10 @@
 import streamlit as st
 import pickle
 import numpy as np
-# Load your trained model
-model = pickle.load(open('SalaryPrediction.pkl', 'rb'))
+
+# Load both model and scaler
+with open('SalaryPrediction.pkl', 'rb') as f:
+    model, scaler = pickle.load(f)
 
 # App title
 st.title("💼 Salary Prediction App")
@@ -13,13 +15,16 @@ experience = st.number_input("Experience (in years):", min_value=0.0, max_value=
 
 # --- Prediction button ---
 if st.button("🔮 Predict Salary"):
-    # Convert inputs into numpy array
+    # Convert input into numpy array
     features = np.array([[experience]])
-    
+
+    # Scale the input
+    features_scaled = scaler.transform(features)
+
     # Predict salary
-    prediction = model.predict(features)
+    prediction = model.predict(features_scaled)
     salary = round(prediction[0], 2)
-    
+
     st.success(f"💰 Estimated Salary: ₹{salary}")
 
 # --- Footer ---
