@@ -8,17 +8,38 @@ import numpy as np
 # loading a known model is safe.
 
 def load_model_and_scaler(filepath):
-    """Loads the model and scaler from the pickle file."""
+    """
+    Loads the model and scaler from the pickle file.
+    Expects the file to contain a tuple: (model, scaler).
+    """
     try:
-        # Load both the model (LinearRegression) and scaler (StandardScaler)
         with open(filepath, 'rb') as f:
-            model, scaler = pickle.load(f)
-        return model, scaler
+            loaded_data = pickle.load(f)
+            
+            # CRITICAL CHECK for the 'cannot unpack' error
+            if isinstance(loaded_data, tuple) and len(loaded_data) == 2:
+                model, scaler = loaded_data
+                return model, scaler
+            
+            # Handle the case where only the model was saved (causing the error)
+            elif not isinstance(loaded_data, tuple):
+                st.error(
+                    f"Error: The model file '{filepath}' returned a single object (likely just the model) "
+                    f"instead of the required two objects (model, scaler). "
+                    f"Please ensure your training script saves the model and scaler as a tuple: "
+                    f"`pickle.dump((model, scaler), f)`."
+                )
+                return None, None
+            else:
+                st.error(f"Error: The model file '{filepath}' did not contain the expected two objects (model, scaler).")
+                return None, None
+
     except FileNotFoundError:
         st.error(f"Error: The model file '{filepath}' was not found. Please ensure it is in the same directory.")
         return None, None
     except Exception as e:
-        st.error(f"An error occurred while loading the model: {e}")
+        # Catch other potential loading errors
+        st.error(f"An unexpected error occurred while loading the model: {e}")
         return None, None
 
 # --- Configuration and Initialization ---
